@@ -1,0 +1,89 @@
+---
+title: "6371 Stats Practice"
+author: "Rashmi Patel"
+date: "4/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Unit 9
+```{r}
+testdata=read.csv("https://raw.githubusercontent.com/RashmiAPatel19/MSDS_6371_Stat_Foundations/master/Unit%209/HW/TEST%20DATA.csv",header=TRUE)
+head(testdata)
+model=lm(math~science,data=testdata)
+length(testdata$science)
+summary(model)
+qt(0.995,198)
+2*pt(2.600,198,lower.tail = FALSE)
+```
+# Unit 10 HW
+```{r}
+library(ggplot2)
+maledata=read.csv("https://raw.githubusercontent.com/RashmiAPatel19/MSDS_6371_Stat_Foundations/master/Unit%2010/Male%20Display%20Data%20Set.csv",header=TRUE)
+head(maledata)
+model.lm=lm(Tcell~Mass,data=maledata)
+summary(model.lm)
+confint(model.lm)
+# scatterplot with linear model line and confidence interval
+ggplot(model.lm, aes(x=Mass, y=Tcell)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", fill="red", se=TRUE,level=0.99)# se=TRUE for confidence interval
+
+# how to include confidence and prediction interval in on graph using ggplot scatterplot
+pred=predict(model.lm,interval="prediction",level=0.99)
+new_df <- cbind(maledata, pred)
+ggplot(new_df, aes(Mass, Tcell))+
+    geom_point() +
+    geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+    geom_smooth(method=lm, se=TRUE)
+
+# confidence interval for mass=4.5
+conf=predict(model.lm,newdata=data.frame(Mass=4.5,Tcell=NA),interval="confidence",level=0.99)
+conf
+# INTERPRETATION: we are 99% confident that the estimated mean Tcell for 4.5 unit mass will be between 0.1356 and 0.3318. Our best estimated mean Tcell for 4.5 unit mass is 0.2351
+new_df <- cbind(maledata, conf)
+ggplot(new_df, aes(Mass, Tcell))+
+    geom_point() +
+     geom_smooth(method=lm, se=TRUE)
+
+# prediction interval for mass=4.5
+pred=predict(model.lm,newdata=data.frame(Mass=4.5,Tcell=NA),interval="prediction",level=0.99)
+pred
+# INTERPRETATION: we are 99% confident that the estimated Tcell for 4.5 unit mass will be between -0.0159 and 0.4863. Our best estimated  Tcell for 4.5 unit mass is 0.2351.
+new_df <- cbind(maledata, pred)
+ggplot(new_df, aes(Mass, Tcell))+
+    geom_point() +
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+         geom_smooth(method=lm, se=TRUE)
+
+#calibration interval
+library(investr)
+# Use mean.response=TRUE for calculating confint 
+calibrate(model.lm,y0=0.3,interval = "Wald",mean.response = TRUE,limit=FALSE)
+# INTERPRETATION: we are 99% confident that the mass required to achieve a mean T cell=0.3 is between 5.243 and 7.705. Our best estimate is 6.474
+
+# Use mean.response=FALSE for calculating prediction interval for single unit 
+calibrate(model.lm,y0=0.3,interval = "Wald",mean.response = FALSE,limit=FALSE)
+# INTERPRETATION: we are 99% confident that the mass required to achieve a T cell=0.3 is between 1.163 and 11.785. Our best estimate is 6.474.
+
+# scatterplot for residuals
+par(mfrow=c(2,2))
+#Plot includes residuals and Standardized residuals vs fitted values, QQ plot
+plot(model.lm, bg = 'blue', pch=23) 
+
+#Histogram for residuals
+ggplot(data = maledata, aes(x = model.lm$residuals)) +
+    geom_histogram(fill = 'steelblue', color = 'black')
+
+ggplot(maledata, aes(x = model.lm$residuals)) +
+        geom_histogram(aes(y = ..density..)) +
+        stat_function(fun = dnorm, colour = "red",
+                      arg = list(mean = mean(model.lm$residuals, na.rm = TRUE),
+                                 sd = sd(model.lm$residuals, na.rm = TRUE)))
+  
+```
