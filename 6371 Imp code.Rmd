@@ -1,0 +1,122 @@
+---
+title: "Stats Sample Code for all test"
+author: "Rashmi Patel"
+date: "4/16/2021"
+output: html_document
+---
+
+
+
+# Unit 2
+
+* One sample t-test
+* Two sample t test
+
+```{r}
+# one sample t test
+# for critical value at 95% 
+qt(0.975, n-1)# two-sided
+qt(0.95, n-1)# one-sided
+
+# t stat
+tstat=xbar-mean(x)/(sd/sqrt(n))
+# pvalue for two sided.
+pt(tstat,n-1,lower.tail = TRUE)
+
+
+# two sample t test
+# for critical value at 95% 
+qt(0.975, n-2)# two-sided
+qt(0.95, n-2)# one-sided
+# t stat
+tstat=xbar1-xbar2-(mux1-mux2)/(sp/sqrt((1/n1)+(1/n2)))
+# pvalue for two sided.
+pt(tstat,n-1,lower.tail = TRUE)
+
+
+#t.test function
+t.test(x,mu=mean,var.equal=TRUE,alternative="less/greater",conf.level=TRUE)# one sample
+t.test(x,y,var.equal=TRUE,alternative="less/greater")# two sample
+t.test(x1,x2,paired=TRUE,var.equal=TRUE,alternative="less/greater/two.sided(default)")# one sample
+
+
+# welchs ttest var.equal=FALSE because sd are different
+t.test(y~x,data=colud,var.equal=FALSE)
+
+```
+
+# Unit 4
+
+* Power code
+```{r}
+
+library(tidyverse)
+# Power code for calculating power
+power.t.test(power="power",n="number of each population",delta="difference in mean",sd="standard deviation",type="two.sample/one.sample",
+             alternative = "two.sided/one.sided")
+
+# Code for power curves
+
+#Power Curve Code for One Sample Test
+
+###########################Effect Size
+powerholder = c()
+effectsizes = seq(50,700,length = 20)
+
+for(i in 1:20)
+{
+  powerholder[i] = power.t.test(n = 8,delta = effectsizes[i], sd = 500, sig.level = .1, type = "one.sample",alternative = "one.sided")$power
+}
+
+plot(effectsizes,powerholder,type = "l", col = "blue", main = "POWER CURVE", ylab = "POWER", lwd = 3)
+
+
+###########################Sample Size
+powerholder = c()
+samplesizes = seq(4,15,by = 1)
+
+for(i in 1:12)
+{
+  powerholder[i] = power.t.test(n = samplesizes[i],delta = 450, sd = 500, sig.level = .1, type = "one.sample",alternative = "one.sided")$power
+}
+
+plot(samplesizes,powerholder,type = "l", col = "blue", main = "POWER CURVE", ylab = "POWER", lwd = 3)
+
+
+# Power Curve Code for Two Sample T Test
+
+###################################Effect Size
+powerholder = c()
+effectsizes = seq(.1,3,length = 20)
+
+for(i in 1:20)
+{
+  powerholder[i] = power.t.test(n = 65,delta = effectsizes[i], sd = 4, sig.level = .01, type = "two.sample",alternative = "one.sided")$power
+}
+
+plot(effectsizes,powerholder,type = "l", col = "blue", main = "POWER CURVE", ylab = "POWER", lwd = 3)
+
+
+
+###################################Sample Size
+powerholder = c()
+samplesizes = seq(10,200,length = 20)
+
+for(i in 1:20)
+{
+  powerholder[i] = power.t.test(n = samplesizes[i], delta = 1.6, sd = 4, sig.level = .01, type = "two.sample",alternative = "one.sided")$power
+}
+
+plot(samplesizes,powerholder,type = "l", col = "blue", main = "POWER CURVE", ylab = "POWER", lwd = 3)
+
+```
+
+# unit 5
+
+* wilcoxon ank sum test(different sample size)
+
+```{r}
+wilcox.test(y~x,alternative="two.sided")
+wilcox.test(y~x,alternative="two.sided",exact=TRUE)
+
+```

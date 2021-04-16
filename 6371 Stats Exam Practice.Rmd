@@ -39,5 +39,123 @@ ggplot(new_df, aes(Mass, Tcell))+
     geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
     geom_line(aes(y=upr), color = "red", linetype = "dashed")+
     geom_smooth(method=lm, se=TRUE) 
+# confidence interval for mass=4.5
+conf=predict(model.lm,newdata=data.frame(Mass=4.5,Tcell=NA),interval="confidence",level=0.99)
+conf
+# INTERPRETATION: we are 99% confident that the estimated mean Tcell for 4.5 unit mass will be between 0.1356 and 0.3318. Our best estimated mean Tcell for 4.5 unit mass is 0.2351
+new_df <- cbind(maledata, conf)
+ggplot(new_df, aes(Mass, Tcell))+
+    geom_point() +
+     geom_smooth(method=lm, se=TRUE)
+# prediction interval for mass=4.5
+pred=predict(model.lm,newdata=data.frame(Mass=4.5,Tcell=NA),interval="prediction",level=0.99)
+pred
+# INTERPRETATION: we are 99% confident that the estimated Tcell for 4.5 unit mass will be between -0.0159 and 0.4863. Our best estimated  Tcell for 4.5 unit mass is 0.2351.
+new_df <- cbind(maledata, pred)
+ggplot(new_df, aes(Mass, Tcell))+
+    geom_point() +
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+         geom_smooth(method=lm, se=TRUE)
+#calibration interval
+library(investr)
+# Use mean.response=TRUE for calculating confint 
+calibrate(model.lm,y0=0.3,interval = "Wald",mean.response = TRUE,limit=FALSE)
+# INTERPRETATION: we are 99% confident that the mass required to achieve a mean T cell=0.3 is between 5.243 and 7.705. Our best estimate is 6.474
+# Use mean.response=FALSE for calculating prediction interval for single unit 
+calibrate(model.lm,y0=0.3,interval = "Wald",mean.response = FALSE,limit=FALSE)
+# INTERPRETATION: we are 99% confident that the mass required to achieve a T cell=0.3 is between 1.163 and 11.785. Our best estimate is 6.474.
+# scatterplot for residuals
+par(mfrow=c(2,2))
+#Plot includes residuals and Standardized residuals vs fitted values, QQ plot
+plot(model.lm, bg = 'blue', pch=23) 
+#Histogram for residuals
+ggplot(data = maledata, aes(x = model.lm$residuals)) +
+    geom_histogram(fill = 'steelblue', color = 'black')
+ggplot(maledata, aes(x = model.lm$residuals)) +
+        geom_histogram(aes(y = ..density..)) +
+        stat_function(fun = dnorm, colour = "red",
+                      arg = list(mean = mean(model.lm$residuals, na.rm = TRUE),
+                                 sd = sd(model.lm$residuals, na.rm = TRUE)))
+  
 
+```
+# Unit 11
+```{r}
+autism=read.csv("https://raw.githubusercontent.com/RashmiAPatel19/MSDS_6371_Stat_Foundations/master/Unit%2011/Autism%20Data%20Prob%2029.csv",header=TRUE)
+head(autism)
+autism.model=lm(Prevalence~Year,data=autism)
+summary(autism.model)
+confint(autism.model)
+newx=autism$Year
+newx=sort(newx)
+head(newx)
+pred.conf=predict(autism.model,newdata=data.frame(Year=newx),interval = "confidence",level=0.95)
+pred.pred=predict(autism.model,newdata=data.frame(Year=newx),interval = "prediction",level=0.95)
+pred.conf
+pred.pred
+par(mfrow=c(2,2))
+#Plot includes residuals and Standardized residuals vs fitted values, QQ plot
+plot(autism.model, bg = 'blue', pch=23) 
+# plot the regression lone CI and prediction interval in one graph 
+bind.autism=cbind(autism,pred.pred)
+ggplot(bind.autism, aes(Year, Prevalence))+
+    geom_point() +
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+         geom_smooth(method=lm, se=TRUE)
+# data looks curvilinear so performing log on y
+log.autism=data.frame(Year=autism$Year,logp=log(autism$Prevalence))
+autism.model.logy=lm(logp~Year,data=log.autism)
+summary(autism.model.logy)
+pred.conf.logy=predict(autism.model.logy,newdata=data.frame(Year=newx),interval = "confidence",level=0.95)
+pred.pred.logy=predict(autism.model.logy,newdata=data.frame(Year=newx),interval = "prediction",level=0.95)
+pred.conf.logy
+pred.pred.logy
+# use this plot for talking abouot assumption check
+par(mfrow=c(2,2))
+plot(autism.model.logy, bg = 'blue', pch=23) 
+
+# after doing lpog again looking at scatterplot to see linearlity
+bind.autism.logy=cbind(log.autism,pred.pred.logy)
+bind.autism.logy
+ggplot(bind.autism.logy, aes(Year, logp))+
+    geom_point() +
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+         geom_smooth(method=lm, se=TRUE)
+# plot for residuals
+plot(x=log.autism$Year,y=autism.model.logy$residuals)
+abline(0,0)
+# histogram with curve for original curve
+studresautism <- rstudent(autism.model)
+
+##Histogram
+hist(studresautism, freq=FALSE, main="Distribution of Studentized Residuals",
+xlab="Studentized Residuals", ylab="Density", ylim=c(0,0.5))
+
+##Create range of x-values for normal curve
+xfit <- seq(min(studresautism)-1, max(studresautism)+1, length=40)
+
+##Generate values from the normal distribution at the specified values
+yfit <- (dnorm(xfit))
+
+##Add the normal curve
+lines(xfit, yfit, ylim=c(0,0.5))
+# histogram with curve for log curve
+##Store studentized residuals
+studresautism2 <- rstudent(autism.model.logy)
+
+##Histogram
+hist(studresautism2, freq=FALSE, main="Distribution of Studentized Residuals",
+xlab="Studentized Residuals", ylab="Density", ylim=c(0,0.5))
+
+##Create range of x-values for normal curve
+xfit2 <- seq(min(studresautism2)-1, max(studresautism2)+1, length=40)
+
+##Generate values from the normal distribution at the specified values
+yfit2 <- (dnorm(xfit2))
+
+##Add the normal curve
+lines(xfit2, yfit2, ylim=c(0,0.5))
 ```
