@@ -1,0 +1,37 @@
+/* Unit 2*/
+/*one sample t-test*/
+/*for crtical value*/
+data cv;
+cval =quantile("t",0.975,n-1)
+run;
+/*for statistic value*/
+data tstat;
+stat=xbar-mean(x)/(sd/sqrt(n));
+run;
+/*for p value*/
+data pv;
+pval=1-cdf("t",tstat,n-1);
+pval=pval*2;
+run;
+
+/*t test assumptions */
+PROC UNIVARIATE DATA=data NORMAL PLOT;
+VAR variable;
+RUN;
+/*one sample t.test*/
+proc ttest data=data alpha=0.1;
+      var time;
+   run;
+/*two sample t.test*/
+proc ttest data=data alpha=0.05/0.01;
+class group;
+var varaible;
+run;
+
+/*Unit 5*/
+/*wilcox test*/
+proc npar1way data=data wilcoxon;
+class group;
+var variable;
+exact;
+run;
